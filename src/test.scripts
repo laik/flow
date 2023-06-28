@@ -1,0 +1,32 @@
+use flow;
+db.state.deleteMany({});
+db.state.insert({_id:"order_state",version:NumberLong(0),kind:"State",retry_delay_sess:3,desc:{"succ":"成功","faild":"失败"}});
+db.state.insert({_id:"payment_state",version:NumberLong(0),kind:"State",retry_delay_sess:3,desc:{"succ":"成功","faild":"失败"}});
+
+
+db.flow.deleteMany({});
+db.flow.insert({_id:"default",version:NumberLong(0),kind:"Flow",steps:[
+    {_id:"order",version:NumberLong(0),kind:"Step",state_desc:"order_state",return:{"succ":"payment","faild":"order"}},
+    {_id:"payment",version:NumberLong(0),kind:"Step",state_desc:"payment_state",return:{"succ":"Done","faild":"payment"}},
+]});
+
+
+// 直接测试flow
+use flow;
+db.fevent.deleteMany({});
+db.sevent.deleteMany({});
+db.fevent.insert({_id:"63a8fe2dacd8fc1ed9081903",version:NumberLong(0),kind:"Fevent",flow:"default",args:{"abc":1},state:"Ready",err:""});
+db.fevent.find()
+
+// test2
+db.resource.deleteMany({});
+db.resource.insert({"_id":"trade-order","db":"trade","table":"order"});
+
+db.condition.deleteMany({});
+db.condition.insert({_id:"default-trade-condition",resource:"trade-order",predicate:"state=1",dest:"default"})
+
+use trade;
+db.order.deleteMany({});
+db.order.insert({"_id":"order_test_1",state:NumberLong(1)});
+db.order.insert({"_id":"order_test_2",state:NumberLong(1)});
+db.order.insert({"_id":"order_test_3",state:NumberLong(1)});
